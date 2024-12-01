@@ -10,6 +10,7 @@ interface TranscriptDrawerProps {
 export function TranscriptDrawer({ children }: TranscriptDrawerProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const scrollButtonRef = useRef<HTMLButtonElement>(null);
+
   return (
     <Drawer>
       <DrawerTrigger asChild>{children}</DrawerTrigger>

@@ -47,19 +47,6 @@ export function Auth() {
 
   return (
     <div>
-      {pgState.openaiAPIKey && (
-        <div className="text-xs flex gap-2 items-center">
-          <span className="font-semibold text-neutral-700">
-            Using OpenAI API Key
-          </span>
-          <div className="py-1 px-2 rounded-md bg-neutral-200 text-neutral-600">
-            {ellipsisMiddle(pgState.openaiAPIKey, 4, 4)}
-          </div>
-          <a className="hover:underline cursor-pointer" onClick={onLogout}>
-            Clear
-          </a>
-        </div>
-      )}
       <AuthDialog
         open={showAuthDialog}
         onOpenChange={setShowAuthDialog}

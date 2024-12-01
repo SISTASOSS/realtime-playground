@@ -10,7 +10,11 @@ import {
 } from "@/components/ui/hover-card";
 import { CircleHelp } from "lucide-react";
 
-export function Instructions() {
+export interface InstructionsProps {
+  isSummary?: boolean;
+}
+
+export function Instructions({isSummary}:InstructionsProps) {
   const [isFocused, setIsFocused] = useState<boolean>(false);
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const { pgState } = usePlaygroundState();
@@ -24,7 +28,7 @@ export function Instructions() {
       <div className="flex justify-between items-center mb-2">
         <div className="flex items-center">
           <div className="text-xs font-semibold uppercase mr-1 tracking-widest">
-            INSTRUCTIONS
+            {!isSummary ?"INSTRUCTIONS": "SUMMARY INSTRUCTIONS"}
           </div>
           <HoverCard open={isOpen}>
             <HoverCardTrigger asChild>
@@ -38,15 +42,13 @@ export function Instructions() {
               side="bottom"
               onInteractOutside={() => setIsOpen(false)}
             >
-              Instructions are a system message that is prepended to the
-              conversation whenever the model responds. Updates will be
-              reflected on the next conversation turn.
+              {!isSummary ? "Instructions are a system message that is prepended to the conversation whenever the model responds. Updates will be reflected on the next conversation turn." : "Instructions are used to summerize the trascipt"}
             </HoverCardContent>
           </HoverCard>
         </div>
       </div>
       <InstructionsEditor
-        instructions={pgState.instructions}
+        instructions={isSummary ? pgState.instructionsSummary : pgState.instructions}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
       />

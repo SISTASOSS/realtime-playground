@@ -16,6 +16,7 @@ import {
   TrackToggle,
   useLocalParticipant,
   useMediaDeviceSelect,
+  useVoiceAssistant,
 } from "@livekit/components-react";
 import { useKrispNoiseFilter } from "@livekit/components-react/krisp";
 import { Track } from "livekit-client";
@@ -23,22 +24,65 @@ import { Track } from "livekit-client";
 import { useConnection } from "@/hooks/use-connection";
 import { useMultibandTrackVolume } from "@/hooks/use-multiband-track-volume";
 import { MultibandAudioVisualizer } from "./agent/visualizers/multiband-bar-visualizer";
+import { usePlaygroundState } from "@/hooks/use-playground-state";
 
 export function SessionControls() {
-  const localParticipant = useLocalParticipant();
+  const { localParticipant } = useLocalParticipant();
+
+  const { pgState } = usePlaygroundState();
+  const { agent } = useVoiceAssistant();
   const deviceSelect = useMediaDeviceSelect({ kind: "audioinput" });
   const { disconnect } = useConnection();
 
   const localMultibandVolume = useMultibandTrackVolume(
-    localParticipant.microphoneTrack?.track,
+    localParticipant.getTrackPublication(Track.Source.Microphone)?.track,
     9,
   );
   const [isMuted, setIsMuted] = useState(localParticipant.isMicrophoneEnabled);
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const { isNoiseFilterEnabled, isNoiseFilterPending, setNoiseFilterEnabled } =
     useKrispNoiseFilter();
   useEffect(() => {
     setIsMuted(localParticipant.isMicrophoneEnabled === false);
   }, [localParticipant.isMicrophoneEnabled]);
+
+  const disconnectSession = async () => {
+    const summaryInstruction = pgState.instructionsSummary;
+    setIsButtonDisabled(true);
+    if (!agent?.identity) {
+      return;
+    }
+
+    try {
+        const transcriptionsArray: { key: string, value: { firstReceivedTime: number, text: string } }[] = [];
+
+        pgState.displayTranscriptions?.forEach(({ participant, segment }) => {
+          if (participant && segment && segment.text.trim() !== "") {
+            transcriptionsArray.push({
+              key: participant.isAgent ? "Bot" : "Human",
+              value: {
+                firstReceivedTime: segment.firstReceivedTime ?? 0,
+                text: segment.text,
+              },
+            });
+          }
+        });
+      let responseObj = await localParticipant.performRpc({
+        destinationIdentity: agent.identity,
+        method: "pg.getSummary",
+        payload: JSON.stringify({
+          summaryInstruction,
+          transcriptionsArray,
+        }),
+      });
+      pgState.summary = responseObj;
+    } catch (error) {
+      console.error("Error performing RPC:", error);
+    }
+
+
+    disconnect();
+  };
 
   return (
     <div className="flex flex-row gap-2">
@@ -115,7 +159,10 @@ export function SessionControls() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <Button variant="destructive" onClick={disconnect}>
+      <Button variant="destructive"
+              onClick={disconnectSession}
+              disabled={isButtonDisabled}
+              className={isButtonDisabled ? "bg-gray-400 cursor-not-allowed" : ""}>
         Disconnect
       </Button>
     </div>

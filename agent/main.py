@@ -4,8 +4,11 @@ import asyncio
 import json
 import logging
 import uuid
+import os
 from dataclasses import asdict, dataclass
-from typing import Any, Dict, Literal
+from typing import Any, Dict, Literal, List
+
+from openai import OpenAI
 
 from livekit import rtc
 from livekit.agents import (
@@ -83,6 +86,67 @@ def parse_session_config(data: Dict[str, Any]) -> SessionConfig:
     )
     return config
 
+class TranscriptionValue:
+    def __init__(
+            self,
+            firstReceivedTime: int,
+            text: str):
+        self.firstReceivedTime = firstReceivedTime
+        self.text = text
+
+class Transcription:
+    def __init__(
+            self,
+            key: str,
+            value: TranscriptionValue):
+        self.key = key
+        self.value = value
+
+class SummaryRequest:
+    def __init__(
+            self,
+            summaryInstruction: str,
+            transcriptionsArray:
+            List[
+                Transcription]):
+        self.summaryInstruction = summaryInstruction
+        self.transcriptionsArray = transcriptionsArray
+
+
+def deserialize_summary_request(
+        json_str: str) -> SummaryRequest:
+    data = json.loads(
+        json_str)
+
+    transcriptions_array = [
+        Transcription(
+            key=
+            item[
+                "key"],
+            value=TranscriptionValue(
+                firstReceivedTime=
+                item[
+                    "value"][
+                    "firstReceivedTime"],
+                text=
+                item[
+                    "value"][
+                    "text"]
+            )
+        )
+        for
+        item
+        in
+        data[
+            "transcriptionsArray"]
+    ]
+
+    return SummaryRequest(
+        summaryInstruction=
+        data[
+            "summaryInstruction"],
+        transcriptionsArray=transcriptions_array
+    )
 
 async def entrypoint(ctx: JobContext):
     logger.info(f"connecting to room {ctx.room.name}")
@@ -105,7 +169,7 @@ def run_multimodal_agent(ctx: JobContext, participant: rtc.Participant):
         raise Exception("OpenAI API Key is required")
 
     model = openai.realtime.RealtimeModel(
-        api_key=config.openai_api_key,
+        api_key=os.getenv("OPENAI_API_SECRET"),
         instructions=config.instructions,
         voice=config.voice,
         temperature=config.temperature,
@@ -150,6 +214,48 @@ def run_multimodal_agent(ctx: JobContext, participant: rtc.Participant):
             return json.dumps({"changed": True})
         else:
             return json.dumps({"changed": False})
+
+    @ctx.room.local_participant.register_rpc_method("pg.getSummary")
+    async def get_summary(
+            data: rtc.rpc.RpcInvocationData,
+    ):
+        if data.caller_identity != participant.identity:
+            return
+        summary_request = deserialize_summary_request(data.payload)
+        summary=await get_summary(summary_request)
+        return summary
+
+    async def get_summary(
+            summary_request: SummaryRequest) -> str:
+        try:
+            # Prepare the prompt
+            prompt = summary_request.summaryInstruction + "\n\n"
+            for transcription in summary_request.transcriptionsArray:
+                prompt += f"{transcription.key}: {transcription.value.text}\n"
+            # Call the OpenAI API
+
+            client = OpenAI(api_key=os.getenv("OPENAI_API_SECRET"))
+
+            chat_completion = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": summary_request.summaryInstruction
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }]
+            )
+
+            # Collect the summary from the response
+            summary = chat_completion.choices[0].message.content
+
+            return summary
+        except Exception as e:
+            logger.error(f"Error getting summary: {e}")
+            return "An error occurred while generating the summary."
 
     @session.on("response_done")
     def on_response_done(response: openai.realtime.RealtimeResponse):

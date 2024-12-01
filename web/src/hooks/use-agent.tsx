@@ -14,7 +14,7 @@ import {
 } from "livekit-client";
 import { useConnection } from "@/hooks/use-connection";
 import { useToast } from "@/hooks/use-toast";
-interface Transcription {
+export interface Transcription {
   segment: TranscriptionSegment;
   participant?: Participant;
   publication?: TrackPublication;

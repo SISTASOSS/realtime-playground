@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { useAgent } from "@/hooks/use-agent";
 import { useEffect, useRef, RefObject, useState } from "react";
+import { usePlaygroundState } from "@/hooks/use-playground-state";
 
 export function Transcript({
   scrollContainerRef,
@@ -12,6 +13,8 @@ export function Transcript({
   const { displayTranscriptions } = useAgent();
   const transcriptEndRef = useRef<HTMLDivElement>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const { pgState } = usePlaygroundState();
+  pgState.displayTranscriptions=displayTranscriptions;
   const calculateDistanceFromBottom = (container: HTMLElement) => {
     const { scrollHeight, scrollTop, clientHeight } = container;
     return scrollHeight - scrollTop - clientHeight;
@@ -70,37 +73,58 @@ export function Transcript({
   }, [scrollButtonRef]);
 
   return (
-    <>
-      <div className="flex items-center text-xs font-semibold uppercase tracking-widest sticky top-0 left-0 bg-white w-full p-4">
-        Transcript
-      </div>
-      <div className="p-4 min-h-[300px] relative">
-        {displayTranscriptions.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-gray-300 text-sm">
-            Get talking to start the conversation!
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {displayTranscriptions.map(
-              ({ segment, participant, publication }) =>
-                segment.text.trim() !== "" && (
-                  <div
-                    key={segment.id}
-                    className={cn(
-                      "flex w-max max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 text-sm",
-                      participant?.isAgent
-                        ? "bg-neutral-100 text-[#09090B]"
-                        : "ml-auto border border-neutral-300",
-                    )}
-                  >
-                    {segment.text.trim()}
-                  </div>
-                ),
-            )}
-            <div ref={transcriptEndRef} />
-          </div>
-        )}
-      </div>
-    </>
+      <>
+        <div
+            className="flex items-center text-xs font-semibold uppercase tracking-widest sticky top-0 left-0 bg-white w-full p-4">
+          Transcript
+        </div>
+        <div
+            className="p-4 min-h-[300px] relative">
+          {displayTranscriptions.length === 0 ? (
+              <div
+                  className="flex items-center justify-center h-full text-gray-300 text-sm">
+                Get
+                talking
+                to
+                start
+                the
+                conversation!
+              </div>
+          ) : (
+              <div
+                  className="space-y-4">
+                {displayTranscriptions.map(
+                    ({
+                       segment,
+                       participant,
+                       publication
+                     }) =>
+                        segment.text.trim() !== "" && (
+                            <div
+                                key={segment.id}
+                                className={cn(
+                                    "flex w-max max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 text-sm",
+                                    participant?.isAgent
+                                        ? "bg-neutral-100 text-[#09090B]"
+                                        : "ml-auto border border-neutral-300",
+                                )}
+                            >
+                              {segment.text.trim()}
+                            </div>
+                        ),
+                )}
+                <div
+                    ref={transcriptEndRef}/>
+              </div>
+          )}
+        </div>
+        <div className="w-full h-px bg-gray-200 my-4"></div>
+        <div className="flex items-center text-xs font-semibold uppercase tracking-widest sticky top-0 left-0 bg-white w-full p-4 mt-4">
+          Summary
+        </div>
+        <div className= "flex w-max max-w-[100%] flex-col gap-2 rounded-lg px-3 py-2 text-sm">
+          {pgState.summary}
+        </div>
+        </>
   );
 }

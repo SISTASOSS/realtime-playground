@@ -15,6 +15,7 @@ import { ChatControls } from "@/components/chat-controls";
 import { useAgent } from "@/hooks/use-agent";
 import { useConnection } from "@/hooks/use-connection";
 import { toast } from "@/hooks/use-toast";
+import { SummaryRequest } from "@/components/summary-request";
 
 export function Chat() {
   const connectionState = useConnectionState();
@@ -110,37 +111,56 @@ export function Chat() {
   );
 
   return (
-    <div className="flex flex-col h-full overflow-hidden p-2 lg:p-4">
-      <ChatControls
-        showEditButton={isChatRunning}
-        isEditingInstructions={isEditingInstructions}
-        onToggleEdit={toggleInstructionsEdit}
-      />
-      <div className="flex flex-col flex-grow items-center lg:justify-between mt-12 lg:mt-0">
-        <div className="w-full h-full flex flex-col">
-          <div className="flex items-center justify-center w-full">
-            <div className="lg:hidden w-full">
-              {isChatRunning && !isEditingInstructions ? (
-                renderVisualizer()
-              ) : (
-                <Instructions />
-              )}
+      <div
+          className="flex flex-col h-full overflow-hidden p-2 lg:p-4">
+        <ChatControls
+            showEditButton={isChatRunning}
+            isEditingInstructions={isEditingInstructions}
+            onToggleEdit={toggleInstructionsEdit}
+        />
+        <div
+            className="flex flex-col flex-grow items-center lg:justify-between mt-12 lg:mt-0">
+          <div
+              className="w-full h-full flex flex-col">
+            <div
+                className="flex items-center justify-center w-full">
+              <div
+                  className="lg:hidden w-full">
+                {isChatRunning && !isEditingInstructions ? (
+                    renderVisualizer()
+                ) : (
+                    <Instructions
+                        isSummary={false}/>
+                )}
+              </div>
+              <div
+                  className="hidden lg:block w-full">
+                <Instructions
+                    isSummary={false}/>
+              </div>
             </div>
-            <div className="hidden lg:block w-full">
-              <Instructions />
+            <div
+                className="grow h-full flex items-center justify-center">
+              <div
+                  className="w-full hidden lg:block">
+                {isChatRunning && !isEditingInstructions && renderVisualizer()}
+              </div>
             </div>
           </div>
-          <div className="grow h-full flex items-center justify-center">
-            <div className="w-full hidden lg:block">
-              {isChatRunning && !isEditingInstructions && renderVisualizer()}
-            </div>
+          <div
+              className="md:mt-2 md:pt-2 md:mb-12 max-md:fixed max-md:bottom-12 max-md:left-1/2 max-md:-translate-x-1/2 max-md:z-50 xl:fixed xl:bottom-12 xl:left-1/2 xl:-translate-x-1/2 xl:z-50">
+            {renderConnectionControl()}
           </div>
         </div>
-
-        <div className="md:mt-2 md:pt-2 md:mb-12 max-md:fixed max-md:bottom-12 max-md:left-1/2 max-md:-translate-x-1/2 max-md:z-50 xl:fixed xl:bottom-12 xl:left-1/2 xl:-translate-x-1/2 xl:z-50">
-          {renderConnectionControl()}
+        <div className="w-full h-px bg-gray-200 my-4"></div>
+        <div
+            className="flex items-center justify-center w-full">
+          <div
+              className="w-full h-full flex flex-col">
+            <Instructions
+                isSummary={true}/>
+          </div>
         </div>
       </div>
-    </div>
   );
 }

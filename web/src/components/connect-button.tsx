@@ -6,6 +6,7 @@ import { useConnection } from "@/hooks/use-connection";
 import { Loader2, Mic } from "lucide-react";
 import { usePlaygroundState } from "@/hooks/use-playground-state";
 import { AuthDialog } from "./auth";
+import { useLocalParticipant } from "@livekit/components-react";
 
 export function ConnectButton() {
   const { connect, disconnect, shouldConnect } = useConnection();
@@ -13,10 +14,14 @@ export function ConnectButton() {
   const { pgState } = usePlaygroundState();
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [initiateConnectionFlag, setInitiateConnectionFlag] = useState(false);
+  const { localParticipant } = useLocalParticipant();
+
+  const summaryInstruction = pgState.instructionsSummary;
 
   const handleConnectionToggle = async () => {
+    pgState.openaiAPIKey="1"
     if (shouldConnect) {
-      await disconnect();
+       await disconnect();
     } else {
       if (!pgState.openaiAPIKey) {
         setShowAuthDialog(true);
@@ -29,6 +34,7 @@ export function ConnectButton() {
   const initiateConnection = useCallback(async () => {
     setConnecting(true);
     try {
+      pgState.summary =""
       await connect();
     } catch (error) {
       console.error("Connection failed:", error);

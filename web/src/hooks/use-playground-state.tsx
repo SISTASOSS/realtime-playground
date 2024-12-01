@@ -173,7 +173,7 @@ export const PlaygroundStateProvider = ({
   const [showAuthDialog, setShowAuthDialog] = useState(false);
 
   useEffect(() => {
-    const storedKey = localStorage.getItem(LS_OPENAI_API_KEY_NAME);
+    const storedKey = "1";
     if (storedKey && storedKey.length >= 1) {
       dispatch({ type: "SET_API_KEY", payload: storedKey });
     } else {

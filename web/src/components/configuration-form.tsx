@@ -160,7 +160,7 @@ export function ConfigurationForm() {
         <div className="flex flex-col h-full">
           <div className="flex-shrink-0 p-4">
             <div className="text-xs font-semibold uppercase tracking-widest">
-              Configuration
+              Configuration | Ayarlar
             </div>
           </div>
           <div className="flex-grow overflow-y-auto p-4 pt-0">

@@ -32,6 +32,7 @@ logger.setLevel(logging.INFO)
 @dataclass
 class SessionConfig:
     openai_api_key: str
+    auth_key: str
     instructions: str
     voice: openai.realtime.api_proto.Voice
     temperature: float
@@ -73,6 +74,7 @@ def parse_session_config(data: Dict[str, Any]) -> SessionConfig:
 
     config = SessionConfig(
         openai_api_key=data.get("openai_api_key", ""),
+        auth_key=data.get("authKey", ""),
         instructions=data.get("instructions", ""),
         voice=data.get("voice", "alloy"),
         temperature=float(data.get("temperature", 0.8)),
@@ -165,8 +167,25 @@ def run_multimodal_agent(ctx: JobContext, participant: rtc.Participant):
 
     logger.info(f"starting MultimodalAgent with config: {config.to_dict()}")
 
-    if not config.openai_api_key:
+    async def show_toast(
+        title: str,
+        description: str | None,
+        variant: Literal["default", "success", "warning", "destructive"],
+    ):
+        await ctx.room.local_participant.perform_rpc(
+            destination_identity=participant.identity,
+            method="pg.toast",
+            payload=json.dumps(
+                {"title": title, "description": description, "variant": variant}
+            ),
+        )
+
+    if not config.openai_api_key and not os.getenv("OPENAI_API_SECRET"):
         raise Exception("OpenAI API Key is required")
+
+    if not config.auth_key or not config.auth_key==os.getenv("AUTH_KEY"):
+        asyncio.create_task( show_toast( "Auth Key is required","Please provide the correct auth key","destructive"))
+        raise Exception("Auth Key is required")
 
     model = openai.realtime.RealtimeModel(
         api_key=os.getenv("OPENAI_API_SECRET"),
@@ -322,19 +341,6 @@ def run_multimodal_agent(ctx: JobContext, participant: rtc.Participant):
             ],
         )
         await ctx.room.local_participant.publish_transcription(transcription)
-
-    async def show_toast(
-        title: str,
-        description: str | None,
-        variant: Literal["default", "success", "warning", "destructive"],
-    ):
-        await ctx.room.local_participant.perform_rpc(
-            destination_identity=participant.identity,
-            method="pg.toast",
-            payload=json.dumps(
-                {"title": title, "description": description, "variant": variant}
-            ),
-        )
 
     last_transcript_id = None
 

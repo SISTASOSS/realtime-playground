@@ -19,11 +19,10 @@ export function ConnectButton() {
   const summaryInstruction = pgState.instructionsSummary;
 
   const handleConnectionToggle = async () => {
-    pgState.openaiAPIKey="1"
     if (shouldConnect) {
        await disconnect();
     } else {
-      if (!pgState.openaiAPIKey) {
+      if (!pgState.authKey) {
         setShowAuthDialog(true);
       } else {
         await initiateConnection();
@@ -49,11 +48,11 @@ export function ConnectButton() {
   };
 
   useEffect(() => {
-    if (initiateConnectionFlag && pgState.openaiAPIKey) {
+    if (initiateConnectionFlag && pgState.authKey) {
       initiateConnection();
       setInitiateConnectionFlag(false);
     }
-  }, [initiateConnectionFlag, initiateConnection, pgState.openaiAPIKey]);
+  }, [initiateConnectionFlag, initiateConnection, pgState.authKey]);
 
   return (
     <>
@@ -65,12 +64,12 @@ export function ConnectButton() {
         {connecting || shouldConnect ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Connecting
+            Connecting | Bağlanılıyor
           </>
         ) : (
           <>
             <Mic className="mr-2 h-4 w-4" />
-            Connect
+            Connect | Bağlan
           </>
         )}
       </Button>

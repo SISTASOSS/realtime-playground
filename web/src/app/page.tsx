@@ -12,7 +12,7 @@ export async function generateMetadata({
 }: {
   searchParams: { [key: string]: string | string[] | undefined };
 }): Promise<Metadata> {
-  let title = "Realtime Playground";
+  let title = "Konuşma Orun Alanı";
   let description =
     "Speech-to-speech playground for OpenAI's new Realtime API. Built on LiveKit Agents.";
 
@@ -22,7 +22,7 @@ export async function generateMetadata({
       (preset) => preset.id === presetId,
     );
     if (selectedPreset) {
-      title = `Realtime Playground`;
+      title = `Konuşma Oyun Alanı`;
       description = `Speak to a "${selectedPreset.name}" in a speech-to-speech playground for OpenAI's new Realtime API. Built on LiveKitAgents.`;
     }
   }

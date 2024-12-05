@@ -24,6 +24,7 @@ export interface PlaygroundState {
   userPresets: Preset[];
   selectedPresetId: string | null;
   openaiAPIKey: string | null | undefined;
+  authKey: string | null | undefined;
   instructions: string;
   instructionsSummary: string;
   summary?: string;
@@ -49,6 +50,7 @@ export const defaultPlaygroundState: PlaygroundState = {
   userPresets: [],
   selectedPresetId: "helpful-ai",
   openaiAPIKey: undefined,
+  authKey: undefined,
   instructions:
     "Sen, ürün ve hizmet satın alma konusunda temkinli, sorgulayıcı ve pazarlık yapmayı seven bir müşterisin. Seni bir satış temsilcisi arayacak ve Telemarketing temsilcilerinin ikna kabiliyetini, çağrı yönetimini test etmek ve geliştirmek amacıyla çalışıyorsun. Aşağıdaki kurallara göre müşteri görüşmesi yap. \n" +
       "1. İhtiyaç Belirsizliği: İlk etapta ürün veya hizmetin sana fayda sağlayıp sağlamayacağı konusunda şüpheci ol. 'Buna gerçekten ihtiyacım var mı?' gibi sorular sorarak temsilcinin açıklamalar yapmasını sağla.\n" +

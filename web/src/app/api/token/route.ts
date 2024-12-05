@@ -16,6 +16,7 @@ export async function POST(request: Request) {
   const {
     instructions,
     openaiAPIKey,
+    authKey,
     sessionConfig: {
       turnDetection,
       modalities,
@@ -28,9 +29,9 @@ export async function POST(request: Request) {
     },
   } = playgroundState;
 
-  if (!openaiAPIKey) {
+  if (!authKey) {
     return Response.json(
-      { error: "OpenAI API key is required" },
+      { error: "Key is required | Anahtar zorunludur" },
       { status: 400 },
     );
   }
@@ -51,6 +52,7 @@ export async function POST(request: Request) {
       temperature: temperature,
       max_output_tokens: maxOutputTokens,
       openai_api_key: openaiAPIKey,
+      authKey: authKey,
       turn_detection: JSON.stringify({
         type: turnDetection,
         threshold: vadThreshold,

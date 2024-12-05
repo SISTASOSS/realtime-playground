@@ -127,7 +127,7 @@ export function SessionControls() {
             forceMount
           >
             <DropdownMenuLabel className="text-xs uppercase tracking-widest">
-              Available inputs
+              Available inputs | Kullanılabilir Girişler
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             {deviceSelect.devices.map((device, index) => (
@@ -144,7 +144,7 @@ export function SessionControls() {
             ))}
             <DropdownMenuSeparator />
             <DropdownMenuLabel className="text-xs uppercase tracking-widest">
-              Audio Settings
+              Audio Settings | Ses Ayarları
             </DropdownMenuLabel>
             <DropdownMenuCheckboxItem
               className="text-xs"
@@ -163,7 +163,7 @@ export function SessionControls() {
               onClick={disconnectSession}
               disabled={isButtonDisabled}
               className={isButtonDisabled ? "bg-gray-400 cursor-not-allowed" : ""}>
-        Disconnect
+        Disconnect | Bağlantıyı Kes
       </Button>
     </div>
   );

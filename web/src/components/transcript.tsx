@@ -76,7 +76,7 @@ export function Transcript({
       <>
         <div
             className="flex items-center text-xs font-semibold uppercase tracking-widest sticky top-0 left-0 bg-white w-full p-4">
-          Transcript
+          Transcript | Metin
         </div>
         <div
             className="p-4 min-h-[300px] relative">
@@ -120,7 +120,7 @@ export function Transcript({
         </div>
         <div className="w-full h-px bg-gray-200 my-4"></div>
         <div className="flex items-center text-xs font-semibold uppercase tracking-widest sticky top-0 left-0 bg-white w-full p-4 mt-4">
-          Summary
+          Summary | Özet
         </div>
         <div className= "flex w-max max-w-[100%] flex-col gap-2 rounded-lg px-3 py-2 text-sm">
           {pgState.summary}

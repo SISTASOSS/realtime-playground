@@ -1,6 +1,7 @@
 import "./globals.css";
 import { PlaygroundStateProvider } from "@/hooks/use-playground-state";
 import { ConnectionProvider } from "@/hooks/use-connection";
+import { ProcessProvider } from "@/hooks/use-process";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { PHProvider } from "@/hooks/posthog-provider";
@@ -36,9 +37,11 @@ export default function RootLayout({
           <PlaygroundStateProvider>
             <ConnectionProvider>
               <TooltipProvider>
-                <PostHogPageView />
-                {children}
-                <Toaster />
+                <ProcessProvider>
+                  <PostHogPageView />
+                  {children}
+                  <Toaster />
+                </ProcessProvider>
               </TooltipProvider>
             </ConnectionProvider>
           </PlaygroundStateProvider>

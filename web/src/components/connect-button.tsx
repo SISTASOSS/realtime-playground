@@ -19,10 +19,11 @@ export function ConnectButton() {
   const summaryInstruction = pgState.instructionsSummary;
 
   const handleConnectionToggle = async () => {
+    pgState.openaiAPIKey = "1"
     if (shouldConnect) {
-       await disconnect();
+      await disconnect();
     } else {
-      if (!pgState.authKey) {
+      if (!pgState.openaiAPIKey) {
         setShowAuthDialog(true);
       } else {
         await initiateConnection();
@@ -48,17 +49,17 @@ export function ConnectButton() {
   };
 
   useEffect(() => {
-    if (initiateConnectionFlag && pgState.authKey) {
+    if (initiateConnectionFlag && pgState.openaiAPIKey) {
       initiateConnection();
       setInitiateConnectionFlag(false);
     }
-  }, [initiateConnectionFlag, initiateConnection, pgState.authKey]);
+  }, [initiateConnectionFlag, initiateConnection, pgState.openaiAPIKey]);
 
   return (
     <>
       <Button
         onClick={handleConnectionToggle}
-        disabled={connecting || shouldConnect}
+        disabled={connecting || shouldConnect || !pgState.instructions}
         className="text-sm font-semibold bg-oai-green"
       >
         {connecting || shouldConnect ? (

@@ -19,7 +19,6 @@ import { playgroundStateHelpers } from "@/lib/playground-state-helpers";
 import { Preset, defaultPresets } from "@/data/presets";
 
 const LS_OPENAI_API_KEY_NAME = "OPENAI_API_KEY";
-const LS_AUTH_KEY_NAME = "AUTH_KEY";
 const LS_USER_PRESETS_KEY = "PG_USER_PRESETS";
 const LS_SELECTED_PRESET_ID_KEY = "PG_SELECTED_PRESET_ID";
 
@@ -52,8 +51,9 @@ type Action =
       payload: Partial<PlaygroundState["sessionConfig"]>;
     }
   | { type: "SET_API_KEY"; payload: string | null }
-  | { type: "SET_AUTH_KEY"; payload: string | null }
   | { type: "SET_INSTRUCTIONS"; payload: string }
+  | { type: "SET_INSTRUCTIONS_SUMMARY"; payload: string }
+  | { type: "SET_JWT_TOKEN"; payload: string }
   | { type: "SET_USER_PRESETS"; payload: Preset[] }
   | { type: "SET_SELECTED_PRESET_ID"; payload: string | null }
   | { type: "SAVE_USER_PRESET"; payload: Preset }
@@ -81,22 +81,22 @@ function playgroundStateReducer(
       }
       return {
         ...state,
-        authKey: action.payload,
-      };
-    case "SET_AUTH_KEY":
-      if (action.payload) {
-        localStorage.setItem(LS_AUTH_KEY_NAME, action.payload);
-      } else {
-        localStorage.removeItem(LS_AUTH_KEY_NAME);
-      }
-      return {
-        ...state,
-        authKey: action.payload,
+        openaiAPIKey: action.payload,
       };
     case "SET_INSTRUCTIONS":
       return {
         ...state,
         instructions: action.payload,
+      };
+    case "SET_INSTRUCTIONS_SUMMARY":
+      return {
+        ...state,
+        instructionsSummary: action.payload,
+      };
+    case "SET_JWT_TOKEN":
+      return {
+        ...state,
+        jwtToken: action.payload,
       };
     case "SET_USER_PRESETS":
       return {
@@ -184,12 +184,12 @@ export const PlaygroundStateProvider = ({
   );
   const [showAuthDialog, setShowAuthDialog] = useState(false);
 
-    useEffect(() => {
-    const storedKey = localStorage.getItem(LS_AUTH_KEY_NAME);
+  useEffect(() => {
+    const storedKey = "1";
     if (storedKey && storedKey.length >= 1) {
-      dispatch({ type: "SET_AUTH_KEY", payload: storedKey });
+      dispatch({ type: "SET_API_KEY", payload: storedKey });
     } else {
-      dispatch({ type: "SET_AUTH_KEY", payload: null });
+      dispatch({ type: "SET_API_KEY", payload: null });
       setShowAuthDialog(true);
     }
 

@@ -1,4 +1,5 @@
 python-dotenv
+confluent_kafka
 livekit >= 0.18.0
 livekit-protocol
 livekit-agents>=0.11.0

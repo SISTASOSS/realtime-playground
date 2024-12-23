@@ -6,13 +6,14 @@ import {
   StartAudio,
 } from "@livekit/components-react";
 
-import { ConfigurationForm } from "@/components/configuration-form";
+import { ProcessSelector } from "@/components/process-selector";
 import { Chat } from "@/components/chat";
 import { Transcript } from "@/components/transcript";
 import { useConnection } from "@/hooks/use-connection";
 import { AgentProvider } from "@/hooks/use-agent";
 import { useRef } from "react";
 import { ChevronDown } from "lucide-react";
+import { ConfigurationForm } from "@/components/configuration-form";
 
 export function RoomComponent() {
   const { shouldConnect, wsUrl, token } = useConnection();
@@ -34,7 +35,10 @@ export function RoomComponent() {
     >
       <AgentProvider>
         <div className="hidden lg:block h-full overflow-y-auto relative border-r">
-          <ConfigurationForm />
+          <div className="hidden">
+            <ConfigurationForm></ConfigurationForm>
+          </div>
+          <ProcessSelector></ProcessSelector>
         </div>
         <div className="flex flex-col justify-center w-full max-w-3xl mx-auto">
           <Chat />

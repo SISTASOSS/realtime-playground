@@ -55,13 +55,9 @@ export function InstructionsEditor({
   }, [instructions]);
 
   return (
-    <textarea
-      value={inputValue}
-      onChange={handleInputChange}
-      onFocus={onFocus}
-      onBlur={handleBlur}
-      placeholder="Enter system instructions"
-      className="w-full h-full rounded outline-none font-mono text-sm"
-    />
+    <div> {instructions
+      ? (<div className="font-semibold text-xs tracking-widest uppercase"> {instructions} </div>)
+      : (<div className="flex items-center h-full text-gray-300 text-sm"> Select process </div>)
+    } </div>
   );
 }

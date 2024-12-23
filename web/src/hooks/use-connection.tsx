@@ -42,7 +42,7 @@ export const ConnectionProvider = ({
   const { pgState, dispatch } = usePlaygroundState();
 
   const connect = async () => {
-    if (!pgState.authKey) {
+    if (!pgState.openaiAPIKey) {
       throw new Error("Bağlanmak için anahtarı girmeniz gerek");
     }
     const response = await fetch("/api/token", {
@@ -73,10 +73,10 @@ export const ConnectionProvider = ({
 
   // Effect to handle API key changes
   useEffect(() => {
-    if (pgState.authKey === null && connectionDetails.shouldConnect) {
+    if (pgState.openaiAPIKey === null && connectionDetails.shouldConnect) {
       disconnect();
     }
-  }, [pgState.authKey, connectionDetails.shouldConnect, disconnect]);
+  }, [pgState.openaiAPIKey, connectionDetails.shouldConnect, disconnect]);
 
   return (
     <ConnectionContext.Provider

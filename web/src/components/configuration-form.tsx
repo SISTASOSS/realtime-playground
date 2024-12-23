@@ -24,6 +24,7 @@ import { RotateCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ModalitiesId } from "@/data/modalities";
 import { TranscriptionModelId } from "@/data/transcription-models";
+import { useProcessContext } from "@/hooks/use-process";
 export const ConfigurationFormSchema = z.object({
   model: z.nativeEnum(ModelId),
   transcriptionModel: z.nativeEnum(TranscriptionModelId),
@@ -56,6 +57,7 @@ export function ConfigurationForm() {
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Ref to track timeout
   const { toast } = useToast();
   const { agent } = useVoiceAssistant();
+  const { jwtToken } = useProcessContext();
 
   const updateConfig = useCallback(async () => {
     const values = pgState.sessionConfig;
@@ -73,6 +75,7 @@ export function ConfigurationForm() {
       max_output_tokens: values.maxOutputTokens
         ? values.maxOutputTokens.toString()
         : "",
+      jwtToken: jwtToken
     };
     // Check if the local participant already has attributes set
     const hadExistingAttributes =

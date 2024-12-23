@@ -152,15 +152,6 @@ export function Chat() {
             {renderConnectionControl()}
           </div>
         </div>
-        <div className="w-full h-px bg-gray-200 my-4"></div>
-        <div
-            className="flex items-center justify-center w-full">
-          <div
-              className="w-full h-full flex flex-col">
-            <Instructions
-                isSummary={true}/>
-          </div>
-        </div>
       </div>
   );
 }

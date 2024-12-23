@@ -2,15 +2,15 @@ from __future__ import annotations
 
 import asyncio
 import json
+import jwt
 import logging
-import uuid
 import os
+import uuid
+from confluent_kafka import Producer
 from dataclasses import asdict, dataclass
-from typing import Any, Dict, Literal, List
-
-from openai import OpenAI
-
-from livekit import rtc
+from datetime import datetime
+from dotenv import load_dotenv
+from livekit import rtc, api
 from livekit.agents import (
     AutoSubscribe,
     JobContext,
@@ -21,24 +21,93 @@ from livekit.agents import (
 )
 from livekit.agents.multimodal import MultimodalAgent
 from livekit.plugins import openai
-
-from dotenv import load_dotenv
+from openai import OpenAI
+from typing import Any, Dict, Literal, List, Optional
 
 load_dotenv()
 
 logger = logging.getLogger("my-worker")
 logger.setLevel(logging.INFO)
 
+conf = {
+    'bootstrap.servers': 'localhost:9092',
+}
+producer = Producer(conf)
+topic = 'GENERAL_MESSAGE_TOPIC'
+
+
+class InteractionEvent:
+    def __init__(self,
+                 eventName: str,
+                 eventType: int,
+                 eventTimestamp: int,
+                 eventOwner: InteractionParticipant,
+                 userData: Dict[str, str]
+                 ):
+        self.eventName = eventName
+        self.eventType = eventType
+        self.eventTimestamp = eventTimestamp
+        self.eventOwner = eventOwner
+        self.userData = userData
+
+    def to_dict(self):
+        return self.__dict__
+
+
+class Message:
+    def __init__(self,
+                 interactionEvent: InteractionEvent,
+                 messageOwner: InteractionParticipant
+                 ):
+        self.interactionEvent = interactionEvent
+        self.messageOwner = messageOwner
+
+    def to_dict(self):
+        return self.__dict__
+
+
+class InteractionParticipant:
+    def __init__(self,
+                 agent: Optional[Agent] = None,
+                 systemParticipant: Optional[SystemParticipant] = None
+                 ):
+        self.agent = agent
+        self.systemParticipant = systemParticipant
+
+    def to_dict(self):
+        return self.__dict__
+
+
+class Agent:
+    def __init__(self,
+                 userId: str
+                 ):
+        self.userId = userId
+
+    def to_dict(self):
+        return self.__dict__
+
+
+class SystemParticipant:
+    def __init__(self,
+                 instanceId: str
+                 ):
+        self.instanceId = instanceId
+
+    def to_dict(self):
+        return self.__dict__
+
+
 @dataclass
 class SessionConfig:
     openai_api_key: str
-    auth_key: str
     instructions: str
     voice: openai.realtime.api_proto.Voice
     temperature: float
     max_response_output_tokens: str | int
     modalities: list[openai.realtime.api_proto.Modality]
     turn_detection: openai.realtime.ServerVadOptions
+    jwtToken: str
 
     def __post_init__(self):
         if self.modalities is None:
@@ -74,7 +143,6 @@ def parse_session_config(data: Dict[str, Any]) -> SessionConfig:
 
     config = SessionConfig(
         openai_api_key=data.get("openai_api_key", ""),
-        auth_key=data.get("authKey", ""),
         instructions=data.get("instructions", ""),
         voice=data.get("voice", "alloy"),
         temperature=float(data.get("temperature", 0.8)),
@@ -85,8 +153,10 @@ def parse_session_config(data: Dict[str, Any]) -> SessionConfig:
             data.get("modalities", "text_and_audio")
         ),
         turn_detection=turn_detection,
+        jwtToken=data.get("jwtToken", ""),
     )
     return config
+
 
 class TranscriptionValue:
     def __init__(
@@ -96,6 +166,7 @@ class TranscriptionValue:
         self.firstReceivedTime = firstReceivedTime
         self.text = text
 
+
 class Transcription:
     def __init__(
             self,
@@ -103,6 +174,7 @@ class Transcription:
             value: TranscriptionValue):
         self.key = key
         self.value = value
+
 
 class SummaryRequest:
     def __init__(
@@ -150,6 +222,7 @@ def deserialize_summary_request(
         transcriptionsArray=transcriptions_array
     )
 
+
 async def entrypoint(ctx: JobContext):
     logger.info(f"connecting to room {ctx.room.name}")
     await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
@@ -180,12 +253,8 @@ def run_multimodal_agent(ctx: JobContext, participant: rtc.Participant):
             ),
         )
 
-    if not config.openai_api_key and not os.getenv("OPENAI_API_SECRET"):
+    if not config.openai_api_key:
         raise Exception("OpenAI API Key is required")
-
-    if not config.auth_key or not config.auth_key==os.getenv("AUTH_KEY"):
-        asyncio.create_task( show_toast( "Auth Key is required","Please provide the correct auth key","destructive"))
-        raise Exception("Auth Key is required")
 
     model = openai.realtime.RealtimeModel(
         api_key=os.getenv("OPENAI_API_SECRET"),
@@ -199,15 +268,56 @@ def run_multimodal_agent(ctx: JobContext, participant: rtc.Participant):
     assistant = MultimodalAgent(model=model)
     assistant.start(ctx.room)
     session = model.sessions[0]
+    itemId = str(uuid.uuid4())[:10]
+    lkapi = api.LiveKitAPI(
+        os.getenv(
+            "LIVEKIT_URL"),
+        os.getenv(
+            "LIVEKIT_API_KEY"),
+        os.getenv(
+            "LIVEKIT_API_SECRET"))
 
     if config.modalities == ["text", "audio"]:
         session.conversation.item.create(
             llm.ChatMessage(
                 role="user",
                 content="Please begin the interaction with the user in a manner consistent with your instructions.",
+                id=str(itemId),
             )
         )
-        session.response.create()
+    egress_id = None
+
+    async def start_record(ctx: JobContext):
+        now = int(datetime.now().timestamp() * 1000)
+        formatted_date = str(now)
+
+        req = api.RoomCompositeEgressRequest(
+            room_name = ctx.room.name,
+            audio_only = True,
+            file_outputs = [
+                api.EncodedFileOutput(
+                    file_type = api.EncodedFileType.MP4,
+                    filepath = "livekit_" + ctx.room.name + "_to_" + ctx.room.name + "_at_" + formatted_date + "_audio" + ".mp4",
+                    s3 = api.S3Upload(
+                        bucket = os.getenv("S3_BUCKET"),
+                        region = os.getenv("S3_REGION"),
+                        access_key = os.getenv("S3_ACCESS_KEY"),
+                        secret = os.getenv("S3_SECRET"),
+                        force_path_style = True,
+                    ),
+                ),
+            ],
+        )
+        res = await lkapi.egress.start_room_composite_egress(req)
+        egress_id = res.egress_id
+
+    async def stop_record():
+        try:
+            req = api.StopEgressRequest(egress_id=egress_id)
+            res = await lkapi.egress.stop_egress(req)
+            ssss = res
+        except Exception as e:
+            logger.error(f"Error stopping egress: {e}")
 
     @ctx.room.local_participant.register_rpc_method("pg.updateConfig")
     async def update_config(
@@ -216,6 +326,7 @@ def run_multimodal_agent(ctx: JobContext, participant: rtc.Participant):
         if data.caller_identity != participant.identity:
             return
 
+        asyncio.create_task(start_record(ctx))
         new_config = parse_session_config(json.loads(data.payload))
         if config != new_config:
             logger.info(
@@ -240,8 +351,10 @@ def run_multimodal_agent(ctx: JobContext, participant: rtc.Participant):
     ):
         if data.caller_identity != participant.identity:
             return
+
+        asyncio.create_task(stop_record())
         summary_request = deserialize_summary_request(data.payload)
-        summary=await get_summary(summary_request)
+        summary = await get_summary(summary_request)
         return summary
 
     async def get_summary(
@@ -270,6 +383,8 @@ def run_multimodal_agent(ctx: JobContext, participant: rtc.Participant):
 
             # Collect the summary from the response
             summary = chat_completion.choices[0].message.content
+
+            await prepare_message(participant, ctx, summary_request.transcriptionsArray, summary)
 
             return summary
         except Exception as e:
@@ -430,6 +545,76 @@ def run_multimodal_agent(ctx: JobContext, participant: rtc.Participant):
                 )
             )
             last_transcript_id = None
+
+    def custom_serializer(obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        if hasattr(obj, 'to_dict'):
+            return obj.to_dict()
+        raise TypeError(f"Type {type(obj)} not serializable")
+
+    def publish_report(err, message):
+        if err is not None:
+            logger.info(f"Message delivery failed: {err}")
+        else:
+            logger.info(f"Message delivered to {message.topic()} [{message.partition()}]")
+
+    def publish_message(message):
+        logger.info(f"Message that is send to kafka obtained as : {message}")
+
+        producer.produce(topic, key="key", value=message, callback=publish_report)
+        producer.flush()
+
+    async def prepare_message(participant, ctx, transcriptionsArray, summary):
+        transcript = ""
+        preferred_username = ""
+
+        try:
+            for transcription in transcriptionsArray:
+                transcript += f"{transcription.key}: {transcription.value.text}\n"
+
+            parsed_data = json.loads(participant.metadata)
+            jwt_token = parsed_data.get("jwtToken")
+
+            try:
+                decoded_data = jwt.decode(jwt_token, options={"verify_signature": False})
+                preferred_username = decoded_data.get("preferred_username")
+            except jwt.DecodeError:
+                print("Error decoding JWT token")
+        except jwt.DecodeError:
+            print("Error preparing message")
+
+        event_name = "REQUEST_CREATE_MEDIA"
+        event_type = 177
+        event_timestamp = int(datetime.now().timestamp() * 1000)
+        event_owner = InteractionParticipant(agent=Agent(userId=preferred_username))
+        message_owner = InteractionParticipant(systemParticipant=SystemParticipant(instanceId="Python"))
+        user_data = {
+            "transcript": transcript,
+            "summary": summary,
+            "roomId": ctx.room.name,
+            "bucket": os.getenv("S3_BUCKET"),
+            "region": os.getenv("S3_REGION"),
+            "access_key": os.getenv("S3_ACCESS_KEY"),
+            "secret": os.getenv("S3_SECRET"),
+        }
+
+        interaction_event = InteractionEvent(
+            eventName=event_name,
+            eventType=event_type,
+            eventTimestamp=event_timestamp,
+            eventOwner=event_owner,
+            userData=user_data
+        )
+
+        interaction_event_dict = interaction_event.to_dict()
+        message_owner_dict = message_owner.to_dict()
+
+        message = json.dumps(
+            {"interactionEvent": interaction_event_dict, "messageOwner": message_owner_dict}, default=custom_serializer
+        ).encode('utf8'),
+
+        publish_message(message[0])
 
 
 if __name__ == "__main__":

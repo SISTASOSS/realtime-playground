@@ -26,8 +26,7 @@ import { ellipsisMiddle } from "@/lib/utils";
 import { AuthBanner } from "./authBanner";
 
 const AuthFormSchema = z.object({
-  authKey: z.string().min(1, { message: "Key is required" }),
-  openaiAPIKey: z.string(),
+  openaiAPIKey: z.string().min(1, { message: "Key is required" }),
 });
 
 export function Auth() {
@@ -38,25 +37,12 @@ export function Auth() {
     e.preventDefault();
     e.stopPropagation();
 
-    dispatch({ type: "SET_AUTH_KEY", payload: null });
+    dispatch({ type: "SET_API_KEY", payload: null });
     setShowAuthDialog(true);
   };
 
   return (
     <div>
-      {pgState.authKey && (
-        <div className="text-xs flex gap-2 items-center">
-          <span className="font-semibold text-neutral-700">
-            Kullanılan Anahtar:
-          </span>
-          <div className="py-1 px-2 rounded-md bg-neutral-200 text-neutral-600">
-            {ellipsisMiddle(pgState.authKey, 1, 1)}
-          </div>
-          <a className="hover:underline cursor-pointer" onClick={onLogout}>
-            Sil
-          </a>
-        </div>
-      )}
       <AuthDialog
         open={showAuthDialog}
         onOpenChange={setShowAuthDialog}
@@ -80,7 +66,6 @@ export function AuthDialog({
     resolver: zodResolver(AuthFormSchema),
     defaultValues: {
       openaiAPIKey: pgState.openaiAPIKey || "",
-      authKey: pgState.authKey || "",
     },
   });
 
@@ -89,13 +74,8 @@ export function AuthDialog({
     form.setValue("openaiAPIKey", pgState.openaiAPIKey || "");
   }, [pgState.openaiAPIKey, form]);
 
-    // Add this useEffect hook to watch for changes in pgState.authKey
-  useEffect(() => {
-    form.setValue("authKey", pgState.authKey || "");
-  }, [pgState.authKey, form]);
-
   function onSubmit(values: z.infer<typeof AuthFormSchema>) {
-    dispatch({ type: "SET_AUTH_KEY", payload: values.authKey || null });
+    dispatch({ type: "SET_API_KEY", payload: values.openaiAPIKey || null });
     onOpenChange(false);
     onAuthComplete();
   }
@@ -123,7 +103,7 @@ export function AuthDialog({
                 <div className="bg-black/10 h-[1px] w-full" />
                 <FormField
                   control={form.control}
-                  name="authKey"
+                  name="openaiAPIKey"
                   render={({ field }) => (
                     <FormItem>
                       <div className="flex flex-col gap-2">

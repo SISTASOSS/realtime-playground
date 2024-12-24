@@ -15,7 +15,6 @@ import { ChatControls } from "@/components/chat-controls";
 import { useAgent } from "@/hooks/use-agent";
 import { useConnection } from "@/hooks/use-connection";
 import { toast } from "@/hooks/use-toast";
-import { SummaryRequest } from "@/components/summary-request";
 
 export function Chat() {
   const connectionState = useConnectionState();

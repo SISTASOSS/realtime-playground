@@ -3,6 +3,8 @@
 import React, { createContext, ReactNode, useContext, useEffect, useState } from "react";
 
 interface ProcessContextType {
+  evaUrl: string;
+  setEvaUrl: (value: string) => void;
   jwtToken: string;
   setJwtToken: (value: string) => void;
   processes: any;
@@ -10,6 +12,8 @@ interface ProcessContextType {
 }
 
 const ProcessContext = createContext<ProcessContextType>({
+  evaUrl: "",
+  setEvaUrl: () => {},
   jwtToken: "",
   setJwtToken: () => {},
   processes: null,
@@ -17,16 +21,17 @@ const ProcessContext = createContext<ProcessContextType>({
 });
 
 export const ProcessProvider = ({ children }: { children: ReactNode }) => {
+  const [evaUrl, setEvaUrl] = useState("");
   const [jwtToken, setJwtToken] = useState("");
   const [processes, setProcesses] = useState(null);
 
-  const evaApi = process.env.NEXT_PUBLIC_EVA_API;
-  if (!evaApi) {
-    throw new Error("NEXT_PUBLIC_EVA_API must be set");
-  }
-
   useEffect(() => {
     const handleProcess = async () => {
+      if (!evaUrl) {
+        console.log("Eva url not ready yet!");
+        return;
+      }
+
       if (!jwtToken) {
         console.log("Jwt token not ready yet!");
         return;
@@ -34,7 +39,7 @@ export const ProcessProvider = ({ children }: { children: ReactNode }) => {
 
       try {
         const response = await fetch(
-          evaApi + "/services/evacore/api/process-templates/find-by-status-published",
+          evaUrl + "/services/evacore/api/process-templates/find-by-status-published",
           {
             method: "GET",
             headers: {
@@ -57,10 +62,10 @@ export const ProcessProvider = ({ children }: { children: ReactNode }) => {
     };
 
     handleProcess();
-  }, [jwtToken]);
+  }, [evaUrl, jwtToken]);
 
   return (
-    <ProcessContext.Provider value={{ jwtToken, setJwtToken, processes, setProcesses }}>
+    <ProcessContext.Provider value={{ evaUrl, setEvaUrl, jwtToken, setJwtToken, processes, setProcesses }}>
       {children}
     </ProcessContext.Provider>
   );

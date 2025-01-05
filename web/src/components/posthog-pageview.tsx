@@ -23,8 +23,17 @@ export default function PostHogPageView(): null {
       });
       console.log("captured pageview", url);
 
-      setEvaUrl(decodeURIComponent(searchParams.get('url')));
-      setJwtToken(searchParams.get('token'));
+      const evaUrl = searchParams.get('url');
+      if (!evaUrl) {
+        console.warn("No 'url' found in search parameters.");
+      }
+      setEvaUrl(decodeURIComponent(evaUrl || ''));
+
+      const token = searchParams.get('token');
+      if (!token) {
+        console.warn("No 'token' found in search parameters.");
+      }
+      setJwtToken(token || '');
     }
   }, [pathname, searchParams, posthog, setEvaUrl, setJwtToken]);
 

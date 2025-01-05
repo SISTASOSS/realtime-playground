@@ -44,6 +44,7 @@ export const ProcessProvider = ({ children }: { children: ReactNode }) => {
             method: "GET",
             headers: {
               Authorization: "Bearer " + jwtToken,
+              credentials: 'include',
               "Content-Type": "application/json",
             },
           }

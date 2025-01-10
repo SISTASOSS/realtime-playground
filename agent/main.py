@@ -303,6 +303,7 @@ def run_multimodal_agent(ctx: JobContext, participant: rtc.Participant):
                         region = os.getenv("S3_REGION"),
                         access_key = os.getenv("S3_ACCESS_KEY"),
                         secret = os.getenv("S3_SECRET"),
+                        endpoint = os.getenv("S3_ENDPOINT"),
                         force_path_style = True,
                     ),
                 ),

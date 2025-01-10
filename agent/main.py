@@ -30,10 +30,10 @@ logger = logging.getLogger("my-worker")
 logger.setLevel(logging.INFO)
 
 conf = {
-    'bootstrap.servers': 'localhost:9092',
+    'bootstrap.servers': os.getenv("KAFKA_URL"),
 }
 producer = Producer(conf)
-topic = 'GENERAL_MESSAGE_TOPIC'
+topic = os.getenv("KAFKA_TOPIC")
 
 
 class InteractionEvent:

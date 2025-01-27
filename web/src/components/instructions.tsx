@@ -48,7 +48,7 @@ export function Instructions({isSummary}:InstructionsProps) {
         </div>
       </div>
       <InstructionsEditor
-        instructions={isSummary ? pgState.instructionsSummary : pgState.instructions}
+        instructions={isSummary ? pgState.instructionsSummary : pgState.instructionsAgent}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
       />

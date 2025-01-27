@@ -26,6 +26,7 @@ export interface PlaygroundState {
   openaiAPIKey: string | null | undefined;
   instructions: string;
   instructionsSummary: string;
+  instructionsAgent: string;
   summary?: string;
   displayTranscriptions?: Transcription[];
   jwtToken?: string | null;
@@ -78,5 +79,12 @@ export const defaultPlaygroundState: PlaygroundState = {
     //   "- İkna becerileri iyi miydi?\n" +
     //   "- Müşteriyi sıktı mı? \n" +
     //   "- Müşteri ikna oldu mu?",
+  instructionsAgent:
+    "",
+  // "Müşteri künyesi: \n" +
+  //   "İsim Soyisim: Deniz Yıldız \n" +
+  //   "Gecikme gün sayısı: 31 \n" +
+  //   "Gecikmeli ürünleri: Kredi Kartı, KMH, ihtiyaç kredisi \n" +
+  //   "Gecikmeli ürünleri toplam tutarı: 500,000 TL \n",
   jwtToken: null
 };

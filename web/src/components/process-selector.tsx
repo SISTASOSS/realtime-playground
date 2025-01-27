@@ -13,12 +13,14 @@ export function ProcessSelector() {
     console.log("Selected config:", config);
 
     const processConfig = JSON.parse(config);
-    const { instruction, summaryInstruction } = processConfig.aiTalkConfig;
+    const { instruction, summaryInstruction, agentInstruction } = processConfig.aiTalkConfig;
     console.log("Instruction:", instruction);
     console.log("Summary Instruction:", summaryInstruction);
+    console.log("Agent Instruction:", agentInstruction);
 
     dispatch({ type: "SET_INSTRUCTIONS", payload: instruction });
     dispatch({ type: "SET_INSTRUCTIONS_SUMMARY", payload: summaryInstruction });
+    dispatch({ type: "SET_INSTRUCTIONS_AGENT", payload: agentInstruction });
     dispatch({ type: "SET_JWT_TOKEN", payload: jwtToken });
     setSelectedIndex(index);
   };
@@ -26,6 +28,7 @@ export function ProcessSelector() {
   const clearSelection = () => {
     dispatch({ type: "SET_INSTRUCTIONS", payload: "" });
     dispatch({ type: "SET_INSTRUCTIONS_SUMMARY", payload: "" });
+    dispatch({ type: "SET_INSTRUCTIONS_AGENT", payload: "" });
     dispatch({ type: "SET_JWT_TOKEN", payload: "" });
     setSelectedIndex(null);
   };

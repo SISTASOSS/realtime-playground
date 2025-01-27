@@ -53,6 +53,7 @@ type Action =
   | { type: "SET_API_KEY"; payload: string | null }
   | { type: "SET_INSTRUCTIONS"; payload: string }
   | { type: "SET_INSTRUCTIONS_SUMMARY"; payload: string }
+  | { type: "SET_INSTRUCTIONS_AGENT"; payload: string }
   | { type: "SET_JWT_TOKEN"; payload: string }
   | { type: "SET_USER_PRESETS"; payload: Preset[] }
   | { type: "SET_SELECTED_PRESET_ID"; payload: string | null }
@@ -92,6 +93,11 @@ function playgroundStateReducer(
       return {
         ...state,
         instructionsSummary: action.payload,
+      };
+    case "SET_INSTRUCTIONS_AGENT":
+      return {
+        ...state,
+        instructionsAgent: action.payload,
       };
     case "SET_JWT_TOKEN":
       return {

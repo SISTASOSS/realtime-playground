@@ -297,7 +297,7 @@ def run_multimodal_agent(ctx: JobContext, participant: rtc.Participant):
             file_outputs = [
                 api.EncodedFileOutput(
                     file_type = api.EncodedFileType.MP4,
-                    filepath = "livekit_" + ctx.room.name + "_to_" + ctx.room.name + "_at_" + formatted_date + "_audio" + ".mp4",
+                    filepath = "aitalk_" + ctx.room.name + "_to_" + ctx.room.name + "_at_" + formatted_date + "_audio" + ".mp4",
                     s3 = api.S3Upload(
                         bucket = os.getenv("S3_BUCKET"),
                         region = os.getenv("S3_REGION"),

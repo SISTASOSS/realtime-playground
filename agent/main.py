@@ -585,7 +585,7 @@ def run_multimodal_agent(ctx: JobContext, participant: rtc.Participant):
             print("Error preparing message")
 
         event_name = "REQUEST_CREATE_MEDIA"
-        event_type = 177
+        event_type = 145
         event_timestamp = int(datetime.now().timestamp() * 1000)
         event_owner = InteractionParticipant(agent=Agent(userId=preferred_username))
         message_owner = InteractionParticipant(systemParticipant=SystemParticipant(instanceId="Python"))
